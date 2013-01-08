@@ -1,0 +1,26 @@
+{
+  "name": "rmrost",
+  "version": "0.0.0",
+  "description": "Remove pesky XMPP roster entries",
+  "main": "index.js",
+  "bin" : { 
+    "rmrost" : "./rmrost.coffee" 
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hildjj/rmrost.git"
+  },
+  "keywords": [
+    "xmpp",
+    "roster",
+    "management",
+    "jabber"
+  ],
+  "dependencies": {
+    "node-xmpp": "*",
+    "node-stringprep": "*",
+    "coffee-script": "*"
+  },
+  "author": "Joe Hildebrand <joe-github@cursive.net>",
+  "license": "BSD"
+}
