@@ -1,16 +1,16 @@
 #!/usr/bin/env coffee
 
-xmpp = require 'node-xmpp'
+Client = require 'node-xmpp-client'
 
 if process.argv.length < 3
-    console.log "Usage: #{process.argv[1]} <my-jid> <my-password>"
-    process.exit 64
+  console.log "Usage: #{process.argv[1]} <my-jid> <my-password>"
+  process.exit 64
 
 class Tracker
   constructor: (@cli) ->
     @id = 0
     @pending = {}
-    @cli.addListener 'rawStanza', (iq) =>
+    @cli.on 'stanza', (iq) =>
       if (iq.name != 'iq') or (iq.attrs.type not in ['result', 'error'])
         return
       id = iq.id
@@ -25,20 +25,20 @@ class Tracker
     #console.log "C: #{iq.toString()}"
     @cli.send iq
 
-cl = new xmpp.Client
+cl = new Client
   jid: process.argv[2]
   password: process.argv[3]
 t = new Tracker cl
 
 getRoster = (cb) ->
-  iq = new xmpp.Iq
+  iq = new Client.IQ
     type: 'get'
   iq.c 'query',
     xmlns: 'jabber:iq:roster'
   t.send iq, cb
 
 rmRoster = (jid, cb) ->
-  iq = new xmpp.Iq
+  iq = new Client.IQ
     type: 'set'
   iq.c 'query',
     xmlns: 'jabber:iq:roster'
@@ -70,10 +70,11 @@ gotRoster = (iq) ->
   if outstanding <= 0
     process.exit 0
 
-cl.addListener 'online', ->
+cl.on 'online', ->
   console.log 'online'
   getRoster gotRoster
 
-cl.addListener 'error', (e) ->
+cl.on 'error', (e) ->
   console.error e
   process.exit 1
+

@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "description": "Remove pesky XMPP roster entries",
   "main": "index.js",
-  "bin" : { 
-    "rmrost" : "./rmrost.coffee" 
+  "bin" : {
+    "rmrost" : "./rmrost.coffee"
   },
   "repository": {
     "type": "git",
@@ -17,7 +17,7 @@
     "jabber"
   ],
   "dependencies": {
-    "node-xmpp": "*",
+    "node-xmpp-client": "*",
     "node-stringprep": "*",
     "coffee-script": "*"
   },
