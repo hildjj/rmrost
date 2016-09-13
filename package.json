@@ -1,6 +1,6 @@
 {
   "name": "rmrost",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Remove pesky XMPP roster entries",
   "main": "index.js",
   "bin": {
