@@ -1,0 +1,113 @@
+#!/usr/bin/env node
+;
+var Client, Tracker, cl, getRoster, gotRoster, rmRoster, t;
+
+Client = require('node-xmpp-client');
+
+if (process.argv.length < 3) {
+  console.log("Usage: " + process.argv[1] + " <my-jid> <my-password>");
+  process.exit(64);
+}
+
+Tracker = (function() {
+  function Tracker(cli) {
+    this.cli = cli;
+    this.id = 0;
+    this.pending = {};
+    this.cli.on('stanza', (function(_this) {
+      return function(iq) {
+        var cb, id, ref;
+        if ((iq.name !== 'iq') || ((ref = iq.attrs.type) !== 'result' && ref !== 'error')) {
+          return;
+        }
+        id = iq.id;
+        cb = _this.pending[id];
+        if (cb) {
+          delete _this.pending[id];
+          return cb(iq);
+        }
+      };
+    })(this));
+  }
+
+  Tracker.prototype.send = function(iq, cb) {
+    var i;
+    i = (iq.id = "track-" + (this.id++));
+    this.pending[i] = cb;
+    return this.cli.send(iq);
+  };
+
+  return Tracker;
+
+})();
+
+cl = new Client({
+  jid: process.argv[2],
+  password: process.argv[3]
+});
+
+t = new Tracker(cl);
+
+getRoster = function(cb) {
+  var iq;
+  iq = new Client.IQ({
+    type: 'get'
+  });
+  iq.c('query', {
+    xmlns: 'jabber:iq:roster'
+  });
+  return t.send(iq, cb);
+};
+
+rmRoster = function(jid, cb) {
+  var iq;
+  iq = new Client.IQ({
+    type: 'set'
+  });
+  iq.c('query', {
+    xmlns: 'jabber:iq:roster'
+  }).c('item', {
+    jid: jid,
+    subscription: 'remove'
+  });
+  return t.send(iq, cb);
+};
+
+gotRoster = function(iq) {
+  var i, j, len, outstanding, q, ref, ref1;
+  outstanding = 1;
+  if (iq.attrs.type !== 'result') {
+    console.error('Roster error');
+    return;
+  }
+  console.log('roster');
+  q = iq.getChild('query', 'jabber:iq:roster');
+  ref = q != null ? q.getChildren('item') : void 0;
+  for (j = 0, len = ref.length; j < len; j++) {
+    i = ref[j];
+    if ((ref1 = i.attrs.subscription) === 'from' || ref1 === 'none') {
+      console.log(i.attrs.jid, i.attrs.subscription);
+      outstanding++;
+      rmRoster(i.attrs.jid, function() {
+        outstanding--;
+        if (outstanding <= 0) {
+          return process.exit(0);
+        }
+      });
+    }
+  }
+  outstanding--;
+  if (outstanding <= 0) {
+    return process.exit(0);
+  }
+};
+
+cl.on('online', function() {
+  console.log('online');
+  return getRoster(gotRoster);
+});
+
+cl.on('error', function(e) {
+  console.error(e);
+  return process.exit(1);
+});

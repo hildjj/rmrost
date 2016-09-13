@@ -1,5 +1,6 @@
 #!/usr/bin/env coffee
-
+`#!/usr/bin/env node
+`
 Client = require 'node-xmpp-client'
 
 if process.argv.length < 3
